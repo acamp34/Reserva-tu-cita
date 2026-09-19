@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda tu cita médica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F1F5F8;
+    --surface: #FFFFFF;
+    --ink: #14212B;
+    --muted: #566875;
+    --line: #D3DDE5;
+    --accent: #1B5FD6;
+    --accent-ink: #FFFFFF;
+    --accent-soft: #E2ECFC;
+    --ok: #17703F;
+    --ok-soft: #E1F3E8;
+    --warn: #A94A10;
+    --warn-soft: #FBEBDD;
+    --danger: #B3261E;
+    --danger-soft: #FBE4E2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0E161C;
+      --surface: #16212A;
+      --ink: #E8EEF2;
+      --muted: #94A4B0;
+      --line: #2A3944;
+      --accent: #6FA3FF;
+      --accent-ink: #0A1320;
+      --accent-soft: #1C2E4B;
+      --ok: #62CF93;
+      --ok-soft: #14301F;
+      --warn: #F0A067;
+      --warn-soft: #3A2716;
+      --danger: #FF8B84;
+      --danger-soft: #3B1B19;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0E161C;
+    --surface: #16212A;
+    --ink: #E8EEF2;
+    --muted: #94A4B0;
+    --line: #2A3944;
+    --accent: #6FA3FF;
+    --accent-ink: #0A1320;
+    --accent-soft: #1C2E4B;
+    --ok: #62CF93;
+    --ok-soft: #14301F;
+    --warn: #F0A067;
+    --warn-soft: #3A2716;
+    --danger: #FF8B84;
+    --danger-soft: #3B1B19;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  main { max-width: 680px; margin: 0 auto; padding: 32px 16px 64px; }
+
+  h1 { font-size: clamp(1.75rem, 5vw, 2.25rem); line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.02em; }
+  h2 { font-size: 1.15rem; margin: 0 0 12px; }
+  .lead { margin: 0 0 24px; color: var(--muted); max-width: 52ch; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  @media (min-width: 560px) { .card { padding: 28px; } }
+
+  label, legend { display: block; font-weight: 600; margin-bottom: 8px; padding: 0; }
+  fieldset { border: 0; margin: 0 0 22px; padding: 0; min-width: 0; }
+
+  .campo { margin-bottom: 20px; }
+  .campo input { margin-bottom: 0; }
+  .ayuda { margin: 6px 0 0; font-size: 0.85rem; color: var(--muted); }
+
+  input[type="text"], input[type="email"] {
+    width: 100%;
+    font: inherit;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  input::placeholder { color: var(--muted); }
+
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .dias { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 8px; }
+  .dia {
+    font: inherit;
+    text-align: left;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .dia .nombre { font-weight: 600; }
+  .dia .estado { font-size: 0.8rem; color: var(--muted); min-height: 1.2em; }
+  .dia[aria-checked="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .dia[aria-checked="true"] .estado { color: var(--accent-ink); opacity: 0.85; }
+
+  .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .slot {
+    font: inherit;
+    text-align: left;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .slot:hover { border-color: var(--accent); }
+  .slot .hora { font-weight: 700; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+  .slot .cupos { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--muted); }
+  .slot .puntos { display: inline-flex; gap: 4px; }
+  .punto { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--muted); }
+  .punto.tomado { background: var(--muted); }
+  .slot.ultimo .cupos { color: var(--warn); font-weight: 600; }
+  .slot.ultimo .punto { border-color: var(--warn); }
+  .slot.ultimo .punto.tomado { background: var(--warn); }
+  .slot[aria-checked="true"] { background: var(--accent-soft); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
+  .vacio { margin: 0; padding: 16px; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); }
+
+  .aviso { margin: 0 0 14px; padding: 12px 14px; border-radius: 10px; font-weight: 500; }
+  .aviso:empty { display: none; }
+  .aviso.ok { background: var(--ok-soft); color: var(--ok); }
+  .aviso.warn { background: var(--warn-soft); color: var(--warn); }
+  .aviso.error { background: var(--danger-soft); color: var(--danger); }
+  .aviso.info { background: var(--accent-soft); color: var(--ink); }
+
+  .primario {
+    font: inherit;
+    font-weight: 700;
+    width: 100%;
+    color: var(--accent-ink);
+    background: var(--accent);
+    border: 0;
+    border-radius: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+  }
+  .primario:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  ul.lista { list-style: none; margin: 0; padding: 0; }
+  ul.lista li {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 0; border-top: 1px solid var(--line);
+  }
+  ul.lista li:first-child { border-top: 0; }
+  .correo { color: var(--muted); }
+  .secundario {
+    font: inherit; font-size: 0.9rem; font-weight: 600;
+    color: var(--danger); background: transparent;
+    border: 1px solid var(--line); border-radius: 8px;
+    padding: 6px 12px; cursor: pointer; white-space: nowrap;
+  }
+  .secundario:hover { border-color: var(--danger); }
+  .neutro { color: var(--ink); }
+  .neutro:hover { border-color: var(--accent); }
+
+  .grupo { margin-bottom: 16px; }
+  .grupo h3 { font-size: 1rem; margin: 0 0 4px; }
+  .grupo h3 small { color: var(--muted); font-weight: 500; margin-left: 6px; }
+  .nota { color: var(--muted); font-size: 0.9rem; margin: 0 0 12px; }
+  .barra { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .slot, .dia { transition: background-color .15s, border-color .15s; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Agenda tu cita médica</h1>
+    <p class="lead">Elige un día y un horario. Cada horario admite hasta 3 personas; cuando se llena, deja de aparecer.</p>
+  </header>
+
+  <section class="card" aria-label="Formulario de cita">
+    <div class="campo">
+      <label for="nombre">Tu nombre</label>
+      <input id="nombre" type="text" autocomplete="name" maxlength="60" placeholder="Nombre y apellido">
+    </div>
+
+    <div class="campo">
+      <label for="email">Correo corporativo</label>
+      <input id="email" type="email" autocomplete="email" maxlength="100" placeholder="nombre@empresa.com" inputmode="email">
+      <p id="ayuda-email" class="ayuda">Solo lo ve quien organiza las citas.</p>
+    </div>
+
+    <fieldset>
+      <legend id="leyenda-dia">Día</legend>
+      <div id="dias" class="dias" role="radiogroup" aria-labelledby="leyenda-dia"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend id="leyenda-horario">Horario</legend>
+      <div id="slots" role="radiogroup" aria-labelledby="leyenda-horario"></div>
+    </fieldset>
+
+    <p id="aviso" class="aviso" role="status" aria-live="polite"></p>
+    <button id="reservar" class="primario" type="button" disabled>Agendar cita</button>
+  </section>
+
+  <section id="mias" class="card" hidden>
+    <h2>Tu cita</h2>
+    <ul id="lista-mias" class="lista"></ul>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ================= CONFIGURACIÓN (edita estas 3 líneas) ================= */
+  var SUPABASE_URL = "https://rqiiyfapbmdpvtmtbruk.supabase.co";   // Supabase > Project Settings > API > Project URL
+  var SUPABASE_KEY = "sb_publishable_WkByi8VAyrtrNSchqC04wA_MxWBkrsY";                  // Supabase > Project Settings > API > anon / publishable key
+  var DOMINIO = "";                                       // ej. "miempresa.com" (vacío = cualquier correo)
+  /* ======================================================================== */
+
+  var CUPOS = 3;
+  var REFRESCO_MS = 10000;   // cada cuántos ms se actualizan los cupos
+
+  var DIAS = [
+    { id: "lun", nombre: "Lunes" },
+    { id: "mar", nombre: "Martes" },
+    { id: "mie", nombre: "Miércoles" },
+    { id: "jue", nombre: "Jueves" },
+    { id: "vie", nombre: "Viernes" }
+  ];
+  var SEMANA = [
+    ["10:00", "10:40"], ["10:40", "11:20"], ["11:20", "12:00"],
+    ["13:00", "13:40"], ["13:40", "14:20"], ["14:20", "15:00"], ["15:00", "15:40"]
+  ];
+  var VIERNES = [
+    ["8:00", "8:40"], ["8:40", "9:20"], ["9:20", "10:00"],
+    ["10:00", "10:40"], ["10:40", "11:20"], ["11:20", "12:00"]
+  ];
+
+  var TODOS = {};
+  var POR_DIA = {};
+  DIAS.forEach(function (d, di) {
+    var base = d.id === "vie" ? VIERNES : SEMANA;
+    POR_DIA[d.id] = base.map(function (par, i) {
+      var s = {
+        id: d.id + "_" + par[0].replace(":", ""),
+        dia: d.id,
+        diaNombre: d.nombre,
+        label: par[0] + " – " + par[1],
+        orden: di * 100 + i
+      };
+      TODOS[s.id] = s;
+      return s;
+    });
+  });
+
+  /* ---------- Estado ---------- */
+  var configurado = SUPABASE_URL.indexOf("TU-PROYECTO") === -1 && SUPABASE_KEY.indexOf("TU-CLAVE") === -1;
+  var cuenta = {};          // horario -> personas que ya lo tienen
+  var cargado = false;
+  var errorRed = false;
+  var cargando = false;
+  var dia = "lun";
+  var slotSel = null;
+  var ocupado = false;
+  var mi = null;            // {slot, token}: la cita de esta persona en este navegador
+
+  /* ---------- Utilidades ---------- */
+  function $(sel) { return document.querySelector(sel); }
+
+  function h(tag, attrs) {
+    var el = document.createElement(tag);
+    attrs = attrs || {};
+    Object.keys(attrs).forEach(function (k) {
+      var v = attrs[k];
+      if (k === "class") el.className = v;
+      else if (k.indexOf("on") === 0) el.addEventListener(k.slice(2), v);
+      else if (v !== false && v != null) el.setAttribute(k, v === true ? "" : v);
+    });
+    for (var i = 2; i < arguments.length; i++) {
+      var kids = [].concat(arguments[i]);
+      for (var j = 0; j < kids.length; j++) {
+        var kid = kids[j];
+        if (kid == null || kid === false) continue;
+        el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+      }
+    }
+    return el;
+  }
+
+  function guardarLocal(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function leerLocal(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function borrarLocal(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+  function guardarMi() {
+    if (mi) guardarLocal("cita-medica", JSON.stringify(mi)); else borrarLocal("cita-medica");
+  }
+
+  function avisar(tipo, texto) {
+    var el = $("#aviso");
+    el.className = "aviso" + (texto ? " " + tipo : "");
+    el.textContent = texto || "";
+  }
+
+  function correoValido(c) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)) return false;
+    if (DOMINIO && c.slice(-(DOMINIO.length + 1)) !== "@" + DOMINIO.toLowerCase()) return false;
+    return true;
+  }
+
+  /* ---------- Conexión con Supabase (llama a funciones SQL) ---------- */
+  async function rpc(nombre, args) {
+    var headers = { "Content-Type": "application/json", "apikey": SUPABASE_KEY };
+    if (SUPABASE_KEY.indexOf("eyJ") === 0) headers["Authorization"] = "Bearer " + SUPABASE_KEY;
+    var res = await fetch(SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/rpc/" + nombre, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(args || {})
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return res.json();
+  }
+
+  async function cargarCupos() {
+    if (!configurado || cargando) return;
+    cargando = true;
+    try {
+      var filas = await rpc("cupos_ocupados");
+      var c = {};
+      filas.forEach(function (f) { if (TODOS[f.slot]) c[f.slot] = f.total; });
+      cuenta = c;
+      cargado = true;
+      errorRed = false;
+      if (mi) {
+        try {
+          var vigente = await rpc("mi_cita", { p_token: mi.token });
+          if (!vigente) { mi = null; guardarMi(); }
+        } catch (e) { /* se reintenta en el próximo ciclo */ }
+      }
+    } catch (e) {
+      errorRed = true;
+    }
+    cargando = false;
+    refrescar();
+  }
+
+  /* ---------- Pintado ---------- */
+  function pintarDias() {
+    var cont = $("#dias");
+    if (!cont.children.length) {
+      DIAS.forEach(function (d) {
+        cont.append(h("button", {
+          type: "button", role: "radio", class: "dia", "data-dia": d.id,
+          "aria-checked": String(d.id === dia),
+          onclick: function () { elegirDia(d.id); }
+        }, h("span", { class: "nombre" }, d.nombre), h("span", { class: "estado" }, "")));
+      });
+    }
+    DIAS.forEach(function (d) {
+      var b = cont.querySelector('[data-dia="' + d.id + '"]');
+      b.setAttribute("aria-checked", String(d.id === dia));
+      var est = b.querySelector(".estado");
+      if (!cargado) { est.textContent = ""; return; }
+      var libres = POR_DIA[d.id].filter(function (s) { return (cuenta[s.id] || 0) < CUPOS; }).length;
+      est.textContent = libres === 0 ? "Completo" : libres + (libres === 1 ? " libre" : " libres");
+    });
+  }
+
+  function pintarSlots() {
+    var cont = $("#slots");
+    var activo = document.activeElement && document.activeElement.getAttribute
+      ? document.activeElement.getAttribute("data-slot") : null;
+    cont.className = "";
+    cont.replaceChildren();
+
+    if (!configurado) {
+      cont.append(h("p", { class: "vacio" },
+        "Falta configurar la base de datos: completa SUPABASE_URL y SUPABASE_KEY al inicio del código."));
+      return;
+    }
+    if (!cargado) {
+      cont.append(h("p", { class: "vacio" },
+        errorRed ? "No se pudieron cargar los horarios. Reintentando…" : "Cargando horarios…"));
+      return;
+    }
+
+    var libres = POR_DIA[dia].filter(function (s) { return (cuenta[s.id] || 0) < CUPOS; });
+
+    if (slotSel && !libres.some(function (s) { return s.id === slotSel; })) {
+      avisar("warn", "Ese horario se acaba de llenar. Elige otro.");
+      slotSel = null;
+    }
+
+    if (!libres.length) {
+      var nombreDia = DIAS.filter(function (d) { return d.id === dia; })[0].nombre;
+      cont.append(h("p", { class: "vacio" },
+        "Ya no quedan horarios el " + nombreDia.toLowerCase() + ". Prueba con otro día."));
+      return;
+    }
+
+    cont.className = "slots";
+    libres.forEach(function (s) {
+      var tomados = cuenta[s.id] || 0;
+      var quedan = CUPOS - tomados;
+      var puntos = [];
+      for (var i = 0; i < CUPOS; i++) puntos.push(h("span", { class: "punto" + (i < tomados ? " tomado" : "") }));
+      cont.append(h("button", {
+        type: "button", role: "radio",
+        class: "slot" + (quedan === 1 ? " ultimo" : ""),
+        "data-slot": s.id,
+        "aria-checked": String(s.id === slotSel),
+        onclick: function () { elegirSlot(s.id); }
+      },
+        h("span", { class: "hora" }, s.label),
+        h("span", { class: "cupos" },
+          h("span", { class: "puntos", "aria-hidden": "true" }, puntos),
+          quedan + (quedan === 1 ? " cupo" : " cupos"))
+      ));
+    });
+
+    if (activo) {
+      var el = cont.querySelector('[data-slot="' + activo + '"]');
+      if (el) el.focus();
+    }
+  }
+
+  function pintarBoton() {
+    var b = $("#reservar");
+    b.disabled = !slotSel || ocupado || !cargado;
+    if (ocupado) b.textContent = "Agendando…";
+    else if (slotSel) b.textContent = "Agendar " + TODOS[slotSel].diaNombre + " " + TODOS[slotSel].label;
+    else b.textContent = "Agendar cita";
+  }
+
+  function pintarMias() {
+    var sec = $("#mias"), ul = $("#lista-mias");
+    ul.replaceChildren();
+    var s = mi && TODOS[mi.slot];
+    sec.hidden = !s;
+    if (!s) return;
+    ul.append(h("li", null,
+      h("span", null, h("strong", null, s.diaNombre), ", " + s.label),
+      h("button", { type: "button", class: "secundario", onclick: cancelar }, "Cancelar")));
+  }
+
+  function refrescar() {
+    pintarDias();
+    pintarSlots();
+    pintarBoton();
+    pintarMias();
+  }
+
+  /* ---------- Acciones ---------- */
+  function elegirDia(id) {
+    if (id === dia) return;
+    dia = id;
+    slotSel = null;
+    avisar("", "");
+    refrescar();
+  }
+
+  function elegirSlot(id) {
+    slotSel = id;
+    avisar("", "");
+    pintarSlots();
+    pintarBoton();
+  }
+
+  async function reservar() {
+    if (ocupado || !slotSel || !configurado) return;
+    var inNombre = $("#nombre"), inEmail = $("#email");
+    var nombre = inNombre.value.trim().replace(/\s+/g, " ");
+    var email = inEmail.value.trim().toLowerCase();
+
+    if (!nombre) {
+      avisar("error", "Escribe tu nombre para agendar.");
+      inNombre.focus();
+      return;
+    }
+    if (!correoValido(email)) {
+      avisar("error", DOMINIO
+        ? "Escribe tu correo corporativo (termina en @" + DOMINIO + ")."
+        : "Escribe un correo corporativo válido, por ejemplo nombre@empresa.com.");
+      inEmail.focus();
+      return;
+    }
+    guardarLocal("nombre", nombre);
+    guardarLocal("email", email);
+
+    if (mi && TODOS[mi.slot]) {
+      var t = TODOS[mi.slot];
+      avisar("warn", "Ya tienes una cita: " + t.diaNombre + " " + t.label +
+        ". Cancélala abajo si quieres cambiar de horario.");
+      return;
+    }
+
+    var s = TODOS[slotSel];
+    ocupado = true;
+    avisar("info", "Confirmando tu cupo…");
+    pintarBoton();
+
+    var res = null;
+    try {
+      res = await rpc("reservar_cita", { p_slot: s.id, p_nombre: nombre, p_email: email });
+    } catch (e) {
+      ocupado = false;
+      avisar("error", "No se pudo agendar por un problema de conexión. Inténtalo de nuevo.");
+      pintarBoton();
+      return;
+    }
+    ocupado = false;
+
+    var estado = res && res.estado;
+    if (estado === "ok") {
+      mi = { slot: s.id, token: res.token };
+      guardarMi();
+      slotSel = null;
+      avisar("ok", "Cita confirmada: " + s.diaNombre + " " + s.label + ".");
+    } else if (estado === "lleno") {
+      avisar("warn", "Ese horario se acaba de llenar. Elige otro.");
+      slotSel = null;
+    } else if (estado === "ya_tiene_cita") {
+      avisar("warn", "Ese correo ya tiene una cita agendada. Si necesitas cambiarla, cancélala primero desde el mismo navegador o pide ayuda a quien organiza.");
+    } else if (estado === "dominio_invalido") {
+      avisar("error", "Usa tu correo corporativo.");
+    } else {
+      avisar("error", "No se pudo agendar. Revisa tus datos e inténtalo de nuevo.");
+    }
+    await cargarCupos();
+    refrescar();
+  }
+
+  async function cancelar() {
+    if (!mi) return;
+    var s = TODOS[mi.slot];
+    try {
+      await rpc("cancelar_cita", { p_token: mi.token });
+      mi = null;
+      guardarMi();
+      avisar("info", "Cancelaste tu cita" + (s ? " de " + s.diaNombre + " " + s.label : "") + ". El cupo quedó libre.");
+      await cargarCupos();
+    } catch (e) {
+      avisar("error", "No se pudo cancelar. Inténtalo de nuevo.");
+    }
+    refrescar();
+  }
+
+  /* ---------- Arranque ---------- */
+  $("#reservar").addEventListener("click", reservar);
+  $("#nombre").addEventListener("input", function (e) { guardarLocal("nombre", e.target.value); });
+  $("#email").addEventListener("input", function (e) { guardarLocal("email", e.target.value); });
+  var gNombre = leerLocal("nombre"), gEmail = leerLocal("email");
+  if (gNombre) $("#nombre").value = gNombre;
+  if (gEmail) $("#email").value = gEmail;
+  if (DOMINIO) $("#email").placeholder = "nombre@" + DOMINIO;
+
+  try {
+    var g = JSON.parse(leerLocal("cita-medica") || "null");
+    if (g && g.slot && g.token) mi = { slot: g.slot, token: g.token };
+  } catch (e) { mi = null; }
+
+  refrescar();
+  cargarCupos();
+  setInterval(function () { if (!document.hidden) cargarCupos(); }, REFRESCO_MS);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) cargarCupos(); });
+})();
+</script>
+</body>
+</html>
